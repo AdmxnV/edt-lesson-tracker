@@ -27,8 +27,8 @@ export default function StudentCard({ student, onDelete, bulkMode = false, selec
   const typeInfo = STUDENT_TYPES.find((t) => t.value === student.student_type)
   const typeVariant = studentTypeBadgeVariant[student.student_type] ?? 'gray'
 
-  const attemptCount = student.attemptCount ?? 0
-  const passCount = student.passCount ?? 0
+  const attemptCount = student.testAttempts?.length ?? 0
+  const passCount = student.testAttempts?.filter((a) => a.result === 'pass').length ?? 0
 
   function handleCardClick() {
     if (bulkMode && onSelect) onSelect(student.id)

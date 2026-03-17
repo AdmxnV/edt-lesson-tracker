@@ -2,7 +2,7 @@ import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import StudentList from '@/components/dashboard/StudentList'
 import StatsCards from '@/components/dashboard/StatsCards'
-import type { StudentWithProgress, TestAttempt } from '@/lib/types'
+import type { StudentWithProgress, TestAttempt, PassStats } from '@/lib/types'
 
 export default async function DashboardPage() {
   const supabase = await createClient()
@@ -19,16 +19,12 @@ export default async function DashboardPage() {
   const studentsWithProgress: StudentWithProgress[] = (students ?? []).map((s) => {
     const lessons = s.lessons ?? []
     const testAttempts: TestAttempt[] = s.test_attempts ?? []
-    const attemptCount = testAttempts.length
-    const passCount = testAttempts.filter((a: TestAttempt) => a.result === 'pass').length
     return {
       ...s,
       lessons,
       completedCount: lessons.filter((l: { completed: boolean }) => l.completed).length,
       uploadedCount: lessons.filter((l: { uploaded_to_rsa: boolean }) => l.uploaded_to_rsa).length,
       testAttempts,
-      attemptCount,
-      passCount,
     }
   })
 
@@ -40,11 +36,36 @@ export default async function DashboardPage() {
   )
   const fullyUploaded = studentsWithProgress.filter((s) => s.uploadedCount === 12).length
 
-  // Pass rate: exclude external students
-  const nonExternalStudents = studentsWithProgress.filter((s) => s.student_type !== 'external')
-  const totalAttempts = nonExternalStudents.reduce((sum, s) => sum + (s.attemptCount ?? 0), 0)
-  const totalPasses = nonExternalStudents.reduce((sum, s) => sum + (s.passCount ?? 0), 0)
-  const passRate = totalAttempts > 0 ? (totalPasses / totalAttempts) * 100 : null
+  // Pass stats: student-level (did the student pass? how many attempts did it take?)
+  // Exclude external students who came in without doing EDT with us
+  const studentsWhoSat = studentsWithProgress.filter(
+    (s) => s.student_type !== 'external' && s.testAttempts.length > 0
+  )
+  const sat = studentsWhoSat.length
+
+  const overallPassCount = studentsWhoSat.filter(
+    (s) => s.testAttempts.some((a) => a.result === 'pass')
+  ).length
+
+  const firstTimePassCount = studentsWhoSat.filter((s) => {
+    // Sort by attempt_number ascending, then check if the first one is a pass
+    const sorted = [...s.testAttempts].sort((a, b) => a.attempt_number - b.attempt_number)
+    return sorted[0]?.result === 'pass'
+  }).length
+
+  const multiAttemptPassCount = overallPassCount - firstTimePassCount
+
+  const passStats: PassStats | null = sat > 0
+    ? {
+        sat,
+        overallCount: overallPassCount,
+        firstTimeCount: firstTimePassCount,
+        multiAttemptCount: multiAttemptPassCount,
+        overallRate: (overallPassCount / sat) * 100,
+        firstTimeRate: (firstTimePassCount / sat) * 100,
+        multiAttemptRate: (multiAttemptPassCount / sat) * 100,
+      }
+    : null
 
   return (
     <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -62,7 +83,7 @@ export default async function DashboardPage() {
         lessonsCompleted={lessonsCompleted}
         pendingUpload={pendingUpload}
         fullyUploaded={fullyUploaded}
-        passRate={passRate}
+        passStats={passStats}
       />
 
       {/* Student list */}

@@ -8,8 +8,6 @@
 }
 
 body {
-  background: var(--color-background);
-  color: var(--color-foreground);
   font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
 }
 
@@ -18,4 +16,7 @@ input[type="checkbox"] {
   accent-color: #1a3a6b;
 }
 
-/* Dark mode: override body bg/color via Tailwind dark: variants on body tag */
+/* Dark mode checkbox */
+.dark input[type="checkbox"] {
+  accent-color: #60a5fa;
+}

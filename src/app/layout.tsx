@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import './globals.css'
 import { createClient } from '@/lib/supabase/server'
 import Navbar from '@/components/layout/Navbar'
+import ThemeProvider from '@/components/layout/ThemeProvider'
 
 export const metadata: Metadata = {
   title: 'EDT Lesson Tracker',
@@ -17,10 +18,12 @@ export default async function RootLayout({
   const { data: { user } } = await supabase.auth.getUser()
 
   return (
-    <html lang="en">
-      <body className="antialiased bg-gray-50 min-h-screen">
-        {user && <Navbar email={user.email} />}
-        {children}
+    <html lang="en" suppressHydrationWarning>
+      <body className="antialiased bg-gray-50 dark:bg-slate-900 min-h-screen">
+        <ThemeProvider>
+          {user && <Navbar email={user.email} />}
+          {children}
+        </ThemeProvider>
       </body>
     </html>
   )

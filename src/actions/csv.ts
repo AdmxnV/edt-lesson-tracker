@@ -9,6 +9,7 @@ export interface CsvStudentRow {
   dob: string | null
   driver_number: string | null
   logbook_number: string | null
+  student_type?: 'full' | 'transfer' | 'pre_test' | 'external'
 }
 
 export async function importStudentsFromCsv(rows: CsvStudentRow[]) {
@@ -19,12 +20,15 @@ export async function importStudentsFromCsv(rows: CsvStudentRow[]) {
 
   if (!rows.length) throw new Error('No valid rows to import')
 
+  const validTypes = ['full', 'transfer', 'pre_test', 'external']
+
   const studentInserts = rows.map((r) => ({
     adi_id: user.id,
     name: r.name.trim(),
     dob: r.dob || null,
     driver_number: r.driver_number || null,
     logbook_number: r.logbook_number || null,
+    student_type: r.student_type && validTypes.includes(r.student_type) ? r.student_type : 'full',
   }))
 
   const { data: inserted, error: studentError } = await supabase

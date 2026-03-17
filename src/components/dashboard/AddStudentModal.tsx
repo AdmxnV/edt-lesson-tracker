@@ -3,6 +3,7 @@
 import { useState, useTransition } from 'react'
 import Modal from '@/components/ui/Modal'
 import { addStudent } from '@/actions/students'
+import { STUDENT_TYPES } from '@/lib/constants'
 
 interface AddStudentModalProps {
   open: boolean
@@ -35,6 +36,9 @@ export default function AddStudentModal({ open, onClose }: AddStudentModalProps)
     onClose()
   }
 
+  const inputClass = 'w-full px-3.5 py-2.5 border border-gray-300 dark:border-slate-600 rounded-lg text-sm bg-white dark:bg-slate-700 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-brand/30 focus:border-brand transition-colors'
+  const labelClass = 'block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1'
+
   return (
     <Modal open={open} onClose={handleClose} title="Add New Student">
       <form onSubmit={handleSubmit} className="space-y-4">
@@ -45,7 +49,7 @@ export default function AddStudentModal({ open, onClose }: AddStudentModalProps)
         )}
 
         <div>
-          <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1">
+          <label htmlFor="name" className={labelClass}>
             Full name <span className="text-red-500">*</span>
           </label>
           <input
@@ -53,45 +57,63 @@ export default function AddStudentModal({ open, onClose }: AddStudentModalProps)
             name="name"
             type="text"
             required
-            className="w-full px-3.5 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand/30 focus:border-brand transition-colors"
+            className={inputClass}
             placeholder="Jane Smith"
           />
         </div>
 
         <div>
-          <label htmlFor="dob" className="block text-sm font-medium text-gray-700 mb-1">
+          <label htmlFor="student_type" className={labelClass}>
+            Student type
+          </label>
+          <select
+            id="student_type"
+            name="student_type"
+            defaultValue="full"
+            className={inputClass}
+          >
+            {STUDENT_TYPES.map((t) => (
+              <option key={t.value} value={t.value}>
+                {t.label} — {t.description}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        <div>
+          <label htmlFor="dob" className={labelClass}>
             Date of birth
           </label>
           <input
             id="dob"
             name="dob"
             type="date"
-            className="w-full px-3.5 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand/30 focus:border-brand transition-colors"
+            className={inputClass}
           />
         </div>
 
         <div>
-          <label htmlFor="driver_number" className="block text-sm font-medium text-gray-700 mb-1">
+          <label htmlFor="driver_number" className={labelClass}>
             Driver number
           </label>
           <input
             id="driver_number"
             name="driver_number"
             type="text"
-            className="w-full px-3.5 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand/30 focus:border-brand transition-colors"
+            className={inputClass}
             placeholder="e.g. D12345678"
           />
         </div>
 
         <div>
-          <label htmlFor="logbook_number" className="block text-sm font-medium text-gray-700 mb-1">
+          <label htmlFor="logbook_number" className={labelClass}>
             Logbook number
           </label>
           <input
             id="logbook_number"
             name="logbook_number"
             type="text"
-            className="w-full px-3.5 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand/30 focus:border-brand transition-colors"
+            className={inputClass}
             placeholder="e.g. LB-2024-001"
           />
         </div>
@@ -100,7 +122,7 @@ export default function AddStudentModal({ open, onClose }: AddStudentModalProps)
           <button
             type="button"
             onClick={handleClose}
-            className="flex-1 px-4 py-2.5 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
+            className="flex-1 px-4 py-2.5 border border-gray-300 dark:border-slate-600 rounded-lg text-sm font-medium text-gray-700 dark:text-slate-300 hover:bg-gray-50 dark:hover:bg-slate-700 transition-colors"
           >
             Cancel
           </button>

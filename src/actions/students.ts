@@ -14,12 +14,16 @@ export async function addStudent(formData: FormData) {
   const dob = (formData.get('dob') as string) || null
   const driver_number = (formData.get('driver_number') as string) || null
   const logbook_number = (formData.get('logbook_number') as string) || null
+  const student_type = (formData.get('student_type') as string) || 'full'
 
   if (!name?.trim()) throw new Error('Name is required')
 
+  const validTypes = ['full', 'transfer', 'pre_test', 'external']
+  const safeType = validTypes.includes(student_type) ? student_type : 'full'
+
   const { data: student, error: studentError } = await supabase
     .from('students')
-    .insert({ adi_id: user.id, name: name.trim(), dob, driver_number, logbook_number })
+    .insert({ adi_id: user.id, name: name.trim(), dob, driver_number, logbook_number, student_type: safeType })
     .select('id')
     .single()
 
@@ -55,4 +59,21 @@ export async function deleteStudent(id: string) {
   if (error) throw new Error(error.message)
 
   revalidatePath('/')
+}
+
+export async function updateStudentNotes(studentId: string, notes: string) {
+  const supabase = await createClient()
+
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) throw new Error('Not authenticated')
+
+  const { error } = await supabase
+    .from('students')
+    .update({ notes: notes || null })
+    .eq('id', studentId)
+    .eq('adi_id', user.id)
+
+  if (error) throw new Error(error.message)
+
+  revalidatePath(`/students/${studentId}`)
 }

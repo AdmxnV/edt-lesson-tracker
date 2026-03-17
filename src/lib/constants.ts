@@ -14,3 +14,10 @@ export const EDT_LESSONS: string[] = [
 ]
 
 export const TOTAL_LESSONS = 12
+
+export const STUDENT_TYPES = [
+  { value: 'full', label: 'Full EDT', description: 'All 12 lessons with you', color: 'blue' },
+  { value: 'transfer', label: 'Transfer', description: 'Transferred from another ADI', color: 'purple' },
+  { value: 'pre_test', label: 'Pre-Test Only', description: 'EDT done, came for prep only', color: 'amber' },
+  { value: 'external', label: 'External', description: 'EDT done elsewhere, unknown history', color: 'gray' },
+] as const

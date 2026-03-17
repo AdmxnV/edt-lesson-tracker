@@ -82,20 +82,27 @@ export default function LessonRow({ lesson, lessonName }: LessonRowProps) {
     save({ completed, completionDate, uploadedToRsa, notes: value })
   }
 
+  const updatedAtFormatted = lesson.updated_at
+    ? new Date(lesson.updated_at).toLocaleDateString('en-IE', { day: 'numeric', month: 'short', year: 'numeric' })
+    : null
+
   return (
-    <tr className={`border-b border-gray-100 last:border-0 transition-colors ${completed ? 'bg-white' : 'bg-gray-50/50'}`}>
+    <tr className={`border-b border-gray-100 dark:border-slate-700 last:border-0 transition-colors ${completed ? 'bg-white dark:bg-slate-800' : 'bg-gray-50/50 dark:bg-slate-800/50'}`}>
       {/* Lesson number */}
       <td className="py-3 pl-4 pr-2 w-10">
-        <span className={`inline-flex items-center justify-center w-7 h-7 rounded-full text-xs font-bold ${completed ? 'bg-brand text-white' : 'bg-gray-200 text-gray-500'}`}>
+        <span className={`inline-flex items-center justify-center w-7 h-7 rounded-full text-xs font-bold ${completed ? 'bg-brand text-white' : 'bg-gray-200 dark:bg-slate-600 text-gray-500 dark:text-slate-300'}`}>
           {lesson.lesson_number}
         </span>
       </td>
 
       {/* Lesson name */}
       <td className="py-3 px-3">
-        <span className={`text-sm ${completed ? 'text-gray-900 font-medium' : 'text-gray-600'}`}>
+        <span className={`text-sm ${completed ? 'text-gray-900 dark:text-white font-medium' : 'text-gray-600 dark:text-slate-400'}`}>
           {lessonName}
         </span>
+        {completed && updatedAtFormatted && (
+          <p className="text-xs text-gray-400 dark:text-slate-500 mt-0.5">Updated {updatedAtFormatted}</p>
+        )}
       </td>
 
       {/* Completed checkbox */}
@@ -116,7 +123,7 @@ export default function LessonRow({ lesson, lessonName }: LessonRowProps) {
           value={completionDate}
           onChange={handleDateChange}
           disabled={!completed}
-          className="w-full px-2 py-1.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand/30 focus:border-brand transition-colors disabled:bg-gray-50 disabled:text-gray-300 disabled:cursor-not-allowed"
+          className="w-full px-2 py-1.5 border border-gray-200 dark:border-slate-600 rounded-lg text-sm bg-white dark:bg-slate-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-brand/30 focus:border-brand transition-colors disabled:bg-gray-50 dark:disabled:bg-slate-800 disabled:text-gray-300 dark:disabled:text-slate-600 disabled:cursor-not-allowed"
         />
       </td>
 
@@ -139,7 +146,7 @@ export default function LessonRow({ lesson, lessonName }: LessonRowProps) {
           onChange={handleNotesChange}
           rows={1}
           placeholder="Notes…"
-          className="w-full px-2 py-1.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand/30 focus:border-brand transition-colors resize-none"
+          className="w-full px-2 py-1.5 border border-gray-200 dark:border-slate-600 rounded-lg text-sm bg-white dark:bg-slate-700 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-brand/30 focus:border-brand transition-colors resize-none"
         />
       </td>
 

@@ -4,6 +4,7 @@ import { useState, useTransition } from 'react'
 import StudentCard from './StudentCard'
 import FilterBar, { type FilterType } from './FilterBar'
 import AddStudentModal from './AddStudentModal'
+import CsvUploadModal from './CsvUploadModal'
 import { deleteStudent } from '@/actions/students'
 import type { StudentWithProgress } from '@/lib/types'
 
@@ -13,7 +14,8 @@ interface StudentListProps {
 
 export default function StudentList({ students }: StudentListProps) {
   const [filter, setFilter] = useState<FilterType>('all')
-  const [modalOpen, setModalOpen] = useState(false)
+  const [addOpen, setAddOpen] = useState(false)
+  const [csvOpen, setCsvOpen] = useState(false)
   const [, startTransition] = useTransition()
 
   const allCount = students.length
@@ -47,15 +49,28 @@ export default function StudentList({ students }: StudentListProps) {
             counts={{ all: allCount, pending: pendingCount, uploaded: uploadedCount }}
           />
         </div>
-        <button
-          onClick={() => setModalOpen(true)}
-          className="inline-flex items-center gap-2 px-4 py-2.5 bg-brand text-white rounded-xl text-sm font-medium hover:bg-brand-dark transition-colors shrink-0"
-        >
-          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-          </svg>
-          Add Student
-        </button>
+
+        {/* Action buttons */}
+        <div className="flex items-center gap-2 shrink-0">
+          <button
+            onClick={() => setCsvOpen(true)}
+            className="inline-flex items-center gap-2 px-4 py-2.5 border border-brand text-brand bg-white rounded-xl text-sm font-medium hover:bg-brand/5 transition-colors"
+          >
+            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M9 19l3 3m0 0l3-3m-3 3V10" />
+            </svg>
+            Import CSV
+          </button>
+          <button
+            onClick={() => setAddOpen(true)}
+            className="inline-flex items-center gap-2 px-4 py-2.5 bg-brand text-white rounded-xl text-sm font-medium hover:bg-brand-dark transition-colors"
+          >
+            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+            </svg>
+            Add Student
+          </button>
+        </div>
       </div>
 
       {filtered.length === 0 ? (
@@ -69,7 +84,9 @@ export default function StudentList({ students }: StudentListProps) {
             {filter === 'all' ? 'No students yet' : 'No students match this filter'}
           </p>
           {filter === 'all' && (
-            <p className="text-gray-400 text-sm mt-1">Add your first student to get started</p>
+            <p className="text-gray-400 text-sm mt-1">
+              Add a student manually or import a CSV to get started
+            </p>
           )}
         </div>
       ) : (
@@ -84,7 +101,8 @@ export default function StudentList({ students }: StudentListProps) {
         </div>
       )}
 
-      <AddStudentModal open={modalOpen} onClose={() => setModalOpen(false)} />
+      <AddStudentModal open={addOpen} onClose={() => setAddOpen(false)} />
+      <CsvUploadModal open={csvOpen} onClose={() => setCsvOpen(false)} />
     </div>
   )
 }

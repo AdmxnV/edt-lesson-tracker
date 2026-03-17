@@ -25,18 +25,26 @@ export interface TestAttempt {
   id: string
   student_id: string
   attempt_number: number
-  attempt_date: string
+  attempt_date: string | null
   result: 'pass' | 'fail'
   test_centre: string | null
   notes: string | null
   created_at: string
 }
 
+export interface PassStats {
+  sat: number              // students who sat at least one test
+  overallCount: number     // students who passed (any attempt)
+  firstTimeCount: number   // students who passed on attempt #1
+  multiAttemptCount: number // students who passed but not first time
+  overallRate: number
+  firstTimeRate: number
+  multiAttemptRate: number
+}
+
 export interface StudentWithProgress extends Student {
   lessons: Lesson[]
   completedCount: number
   uploadedCount: number
-  testAttempts?: TestAttempt[]
-  passCount?: number
-  attemptCount?: number
+  testAttempts: TestAttempt[]
 }

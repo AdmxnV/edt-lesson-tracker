@@ -11,9 +11,12 @@ interface TestAttemptsSectionProps {
 }
 
 export default function TestAttemptsSection({ studentId, attempts }: TestAttemptsSectionProps) {
+  const currentYear = new Date().getFullYear()
+  const yearOptions = Array.from({ length: currentYear - 2009 }, (_, i) => currentYear - i)
+
   const [showForm, setShowForm] = useState(false)
   const [result, setResult] = useState<'pass' | 'fail'>('fail')
-  const [date, setDate] = useState('')
+  const [year, setYear] = useState<string>(String(currentYear))
   const [centre, setCentre] = useState('')
   const [notes, setNotes] = useState('')
   const [formError, setFormError] = useState<string | null>(null)
@@ -24,18 +27,17 @@ export default function TestAttemptsSection({ studentId, attempts }: TestAttempt
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
-    if (!date) { setFormError('Date is required'); return }
     setFormError(null)
     startTransition(async () => {
       try {
         await addTestAttempt(studentId, {
-          attempt_date: date,
+          attempt_year: year ? Number(year) : null,
           result,
           test_centre: centre || undefined,
           notes: notes || undefined,
         })
         setShowForm(false)
-        setDate('')
+        setYear(String(currentYear))
         setCentre('')
         setNotes('')
         setResult('fail')
@@ -54,6 +56,11 @@ export default function TestAttemptsSection({ studentId, attempts }: TestAttempt
         // silently fail — page will re-render
       }
     })
+  }
+
+  function displayYear(dateStr: string | null) {
+    if (!dateStr) return '—'
+    return new Date(dateStr).getFullYear()
   }
 
   const sorted = [...attempts].sort((a, b) => a.attempt_number - b.attempt_number)
@@ -92,8 +99,13 @@ export default function TestAttemptsSection({ studentId, attempts }: TestAttempt
           )}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <label className={labelClass}>Date <span className="text-red-500">*</span></label>
-              <input type="date" value={date} onChange={(e) => setDate(e.target.value)} className={inputClass} required />
+              <label className={labelClass}>Year</label>
+              <select value={year} onChange={(e) => setYear(e.target.value)} className={inputClass}>
+                <option value="">— Not recorded —</option>
+                {yearOptions.map((y) => (
+                  <option key={y} value={y}>{y}</option>
+                ))}
+              </select>
             </div>
             <div>
               <label className={labelClass}>Result <span className="text-red-500">*</span></label>
@@ -161,7 +173,7 @@ export default function TestAttemptsSection({ studentId, attempts }: TestAttempt
             <thead>
               <tr className="border-b border-gray-100 dark:border-slate-700">
                 <th className="pb-2 text-left text-xs font-semibold text-gray-500 dark:text-slate-400 uppercase tracking-wide w-12">#</th>
-                <th className="pb-2 text-left text-xs font-semibold text-gray-500 dark:text-slate-400 uppercase tracking-wide">Date</th>
+                <th className="pb-2 text-left text-xs font-semibold text-gray-500 dark:text-slate-400 uppercase tracking-wide">Year</th>
                 <th className="pb-2 text-left text-xs font-semibold text-gray-500 dark:text-slate-400 uppercase tracking-wide">Result</th>
                 <th className="pb-2 text-left text-xs font-semibold text-gray-500 dark:text-slate-400 uppercase tracking-wide hidden sm:table-cell">Test Centre</th>
                 <th className="pb-2 text-left text-xs font-semibold text-gray-500 dark:text-slate-400 uppercase tracking-wide hidden md:table-cell">Notes</th>
@@ -173,7 +185,7 @@ export default function TestAttemptsSection({ studentId, attempts }: TestAttempt
                 <tr key={attempt.id} className="border-b border-gray-50 dark:border-slate-700/50 last:border-0">
                   <td className="py-3 text-sm font-medium text-gray-500 dark:text-slate-400">{attempt.attempt_number}</td>
                   <td className="py-3 text-sm text-gray-900 dark:text-white">
-                    {new Date(attempt.attempt_date).toLocaleDateString('en-IE', { day: 'numeric', month: 'short', year: 'numeric' })}
+                    {displayYear(attempt.attempt_date)}
                   </td>
                   <td className="py-3">
                     <Badge variant={attempt.result === 'pass' ? 'green' : 'red'}>

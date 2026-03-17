@@ -61,6 +61,47 @@ export async function deleteStudent(id: string) {
   revalidatePath('/')
 }
 
+export async function bulkCompleteStudentLessons(
+  studentIds: string[],
+  completionDate: string | null
+) {
+  const supabase = await createClient()
+
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) throw new Error('Not authenticated')
+  if (!studentIds.length) throw new Error('No students selected')
+
+  // Verify all students belong to this ADI
+  const { data: ownedStudents } = await supabase
+    .from('students')
+    .select('id')
+    .eq('adi_id', user.id)
+    .in('id', studentIds)
+
+  const ownedIds = (ownedStudents ?? []).map((s) => s.id)
+  if (!ownedIds.length) throw new Error('No valid students found')
+
+  // Upsert all 12 lessons as completed for each selected student
+  const lessonRows = ownedIds.flatMap((studentId) =>
+    Array.from({ length: TOTAL_LESSONS }, (_, i) => ({
+      student_id: studentId,
+      lesson_number: i + 1,
+      completed: true,
+      completion_date: completionDate || null,
+      uploaded_to_rsa: false,
+    }))
+  )
+
+  const { error } = await supabase
+    .from('lessons')
+    .upsert(lessonRows, { onConflict: 'student_id,lesson_number' })
+
+  if (error) throw new Error(error.message)
+
+  revalidatePath('/')
+  return { count: ownedIds.length }
+}
+
 export async function updateStudentNotes(studentId: string, notes: string) {
   const supabase = await createClient()
 

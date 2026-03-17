@@ -5,6 +5,7 @@ import StudentCard from './StudentCard'
 import FilterBar, { type FilterType } from './FilterBar'
 import AddStudentModal from './AddStudentModal'
 import CsvUploadModal from './CsvUploadModal'
+import BulkActionBar from './BulkActionBar'
 import { deleteStudent } from '@/actions/students'
 import type { StudentWithProgress } from '@/lib/types'
 
@@ -15,6 +16,8 @@ export default function StudentList({ students }: StudentListProps) {
   const [search, setSearch] = useState('')
   const [addOpen, setAddOpen] = useState(false)
   const [csvOpen, setCsvOpen] = useState(false)
+  const [bulkMode, setBulkMode] = useState(false)
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set())
   const [, startTransition] = useTransition()
 
   const allCount = students.length
@@ -34,13 +37,37 @@ export default function StudentList({ students }: StudentListProps) {
     return true
   })
 
+  const allFilteredSelected = filtered.length > 0 && filtered.every((s) => selectedIds.has(s.id))
+
+  function toggleSelectAll() {
+    if (allFilteredSelected) {
+      setSelectedIds(new Set())
+    } else {
+      setSelectedIds(new Set(filtered.map((s) => s.id)))
+    }
+  }
+
+  function handleSelect(id: string) {
+    setSelectedIds((prev) => {
+      const next = new Set(prev)
+      if (next.has(id)) next.delete(id)
+      else next.add(id)
+      return next
+    })
+  }
+
   function handleDelete(id: string) {
     if (!confirm('Delete this student and all their lesson records? This cannot be undone.')) return
     startTransition(async () => { await deleteStudent(id) })
   }
 
+  function exitBulkMode() {
+    setBulkMode(false)
+    setSelectedIds(new Set())
+  }
+
   return (
-    <div>
+    <div className={bulkMode ? 'pb-24' : ''}>
       {/* Search bar */}
       <div className="mb-4">
         <div className="relative max-w-md">
@@ -69,34 +96,68 @@ export default function StudentList({ students }: StudentListProps) {
       </div>
 
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
-        <div className="flex-1 max-w-lg">
+        <div className="flex items-center gap-3 flex-1 max-w-lg flex-wrap">
           <FilterBar
             active={filter}
             onChange={setFilter}
             counts={{ all: allCount, pending: pendingCount, uploaded: uploadedCount }}
           />
+          {/* Bulk mode: select all toggle */}
+          {bulkMode && filtered.length > 0 && (
+            <button
+              onClick={toggleSelectAll}
+              className="text-xs font-medium text-brand dark:text-blue-400 hover:underline whitespace-nowrap"
+            >
+              {allFilteredSelected ? 'Deselect all' : `Select all (${filtered.length})`}
+            </button>
+          )}
         </div>
 
         {/* Action buttons */}
         <div className="flex items-center gap-2 shrink-0">
-          <button
-            onClick={() => setCsvOpen(true)}
-            className="inline-flex items-center gap-2 px-4 py-2.5 border border-brand text-brand bg-white dark:bg-slate-800 rounded-xl text-sm font-medium hover:bg-brand/5 transition-colors"
-          >
-            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M9 19l3 3m0 0l3-3m-3 3V10" />
-            </svg>
-            Import CSV
-          </button>
-          <button
-            onClick={() => setAddOpen(true)}
-            className="inline-flex items-center gap-2 px-4 py-2.5 bg-brand text-white rounded-xl text-sm font-medium hover:bg-brand-dark transition-colors"
-          >
-            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-            </svg>
-            Add Student
-          </button>
+          {!bulkMode ? (
+            <>
+              <button
+                onClick={() => setBulkMode(true)}
+                className="inline-flex items-center gap-2 px-4 py-2.5 border border-gray-300 dark:border-slate-600 text-gray-600 dark:text-slate-300 bg-white dark:bg-slate-800 rounded-xl text-sm font-medium hover:border-brand hover:text-brand transition-colors"
+              >
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
+                </svg>
+                Bulk Select
+              </button>
+              <button
+                onClick={() => setCsvOpen(true)}
+                className="inline-flex items-center gap-2 px-4 py-2.5 border border-brand text-brand bg-white dark:bg-slate-800 rounded-xl text-sm font-medium hover:bg-brand/5 transition-colors"
+              >
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M9 19l3 3m0 0l3-3m-3 3V10" />
+                </svg>
+                Import CSV
+              </button>
+              <button
+                onClick={() => setAddOpen(true)}
+                className="inline-flex items-center gap-2 px-4 py-2.5 bg-brand text-white rounded-xl text-sm font-medium hover:bg-brand-dark transition-colors"
+              >
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                </svg>
+                Add Student
+              </button>
+            </>
+          ) : (
+            <div className="flex items-center gap-2">
+              <span className="text-sm text-gray-500 dark:text-slate-400">
+                {selectedIds.size} selected
+              </span>
+              <button
+                onClick={exitBulkMode}
+                className="px-4 py-2.5 border border-gray-300 dark:border-slate-600 text-gray-600 dark:text-slate-300 bg-white dark:bg-slate-800 rounded-xl text-sm font-medium hover:bg-gray-50 transition-colors"
+              >
+                Cancel
+              </button>
+            </div>
+          )}
         </div>
       </div>
 
@@ -127,6 +188,9 @@ export default function StudentList({ students }: StudentListProps) {
               key={student.id}
               student={student}
               onDelete={handleDelete}
+              bulkMode={bulkMode}
+              selected={selectedIds.has(student.id)}
+              onSelect={handleSelect}
             />
           ))}
         </div>
@@ -134,6 +198,15 @@ export default function StudentList({ students }: StudentListProps) {
 
       <AddStudentModal open={addOpen} onClose={() => setAddOpen(false)} />
       <CsvUploadModal open={csvOpen} onClose={() => setCsvOpen(false)} />
+
+      {bulkMode && (
+        <BulkActionBar
+          selectedCount={selectedIds.size}
+          selectedIds={Array.from(selectedIds)}
+          onClearSelection={() => setSelectedIds(new Set())}
+          onDone={exitBulkMode}
+        />
+      )}
     </div>
   )
 }

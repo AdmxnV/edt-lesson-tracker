@@ -4,7 +4,13 @@ import Badge from '@/components/ui/Badge'
 import { STUDENT_TYPES } from '@/lib/constants'
 import type { StudentWithProgress } from '@/lib/types'
 
-interface StudentCardProps { student: StudentWithProgress; onDelete: (id: string) => void }
+interface StudentCardProps {
+  student: StudentWithProgress
+  onDelete: (id: string) => void
+  bulkMode?: boolean
+  selected?: boolean
+  onSelect?: (id: string) => void
+}
 
 const studentTypeBadgeVariant: Record<string, 'blue' | 'purple' | 'yellow' | 'gray'> = {
   full: 'blue',
@@ -13,7 +19,7 @@ const studentTypeBadgeVariant: Record<string, 'blue' | 'purple' | 'yellow' | 'gr
   external: 'gray',
 }
 
-export default function StudentCard({ student, onDelete }: StudentCardProps) {
+export default function StudentCard({ student, onDelete, bulkMode = false, selected = false, onSelect }: StudentCardProps) {
   const { completedCount, uploadedCount } = student
   const pendingUpload = completedCount - uploadedCount
   const isComplete = completedCount === 12
@@ -24,8 +30,35 @@ export default function StudentCard({ student, onDelete }: StudentCardProps) {
   const attemptCount = student.attemptCount ?? 0
   const passCount = student.passCount ?? 0
 
+  function handleCardClick() {
+    if (bulkMode && onSelect) onSelect(student.id)
+  }
+
   return (
-    <div className="bg-white dark:bg-slate-800 rounded-2xl border border-gray-200 dark:border-slate-700 shadow-sm p-5 hover:shadow-md transition-shadow group">
+    <div
+      onClick={handleCardClick}
+      className={`relative bg-white dark:bg-slate-800 rounded-2xl border shadow-sm p-5 transition-all group
+        ${bulkMode ? 'cursor-pointer' : 'hover:shadow-md'}
+        ${selected
+          ? 'border-brand dark:border-brand ring-2 ring-brand/30'
+          : 'border-gray-200 dark:border-slate-700'}
+      `}
+    >
+      {/* Bulk select checkbox */}
+      {bulkMode && (
+        <div className="absolute top-3 right-3 z-10">
+          <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center transition-colors
+            ${selected ? 'bg-brand border-brand' : 'border-gray-300 dark:border-slate-500 bg-white dark:bg-slate-700'}`}
+          >
+            {selected && (
+              <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+              </svg>
+            )}
+          </div>
+        </div>
+      )}
+
       <div className="flex items-start justify-between mb-4">
         <div className="min-w-0">
           <h3 className="font-semibold text-gray-900 dark:text-white truncate">{student.name}</h3>
@@ -33,19 +66,26 @@ export default function StudentCard({ student, onDelete }: StudentCardProps) {
             <p className="text-xs text-gray-400 dark:text-slate-500 mt-0.5">Driver No: {student.driver_number}</p>
           )}
         </div>
-        <div className="flex items-center gap-1 ml-2 shrink-0 flex-wrap justify-end">
-          {typeInfo && <Badge variant={typeVariant}>{typeInfo.label}</Badge>}
-          {isComplete && <Badge variant="green">Complete</Badge>}
-          <button
-            onClick={() => onDelete(student.id)}
-            className="p-1.5 rounded-lg text-gray-300 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors opacity-0 group-hover:opacity-100"
-            title="Delete student"
-          >
-            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-            </svg>
-          </button>
-        </div>
+        {!bulkMode && (
+          <div className="flex items-center gap-1 ml-2 shrink-0 flex-wrap justify-end">
+            {typeInfo && <Badge variant={typeVariant}>{typeInfo.label}</Badge>}
+            {isComplete && <Badge variant="green">Complete</Badge>}
+            <button
+              onClick={(e) => { e.stopPropagation(); onDelete(student.id) }}
+              className="p-1.5 rounded-lg text-gray-300 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors opacity-0 group-hover:opacity-100"
+              title="Delete student"
+            >
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+              </svg>
+            </button>
+          </div>
+        )}
+        {bulkMode && typeInfo && (
+          <div className="ml-2 shrink-0">
+            <Badge variant={typeVariant}>{typeInfo.label}</Badge>
+          </div>
+        )}
       </div>
 
       <ProgressBar value={completedCount} />
@@ -75,15 +115,18 @@ export default function StudentCard({ student, onDelete }: StudentCardProps) {
         )}
       </div>
 
-      <Link
-        href={`/students/${student.id}`}
-        className="mt-4 flex items-center justify-center w-full py-2 rounded-lg bg-gray-50 dark:bg-slate-700 hover:bg-brand/5 dark:hover:bg-slate-600 text-sm font-medium text-gray-600 dark:text-slate-300 hover:text-brand dark:hover:text-white transition-colors border border-gray-200 dark:border-slate-600 hover:border-brand/30"
-      >
-        View Lessons
-        <svg className="w-4 h-4 ml-1.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-        </svg>
-      </Link>
+      {!bulkMode && (
+        <Link
+          href={`/students/${student.id}`}
+          onClick={(e) => e.stopPropagation()}
+          className="mt-4 flex items-center justify-center w-full py-2 rounded-lg bg-gray-50 dark:bg-slate-700 hover:bg-brand/5 dark:hover:bg-slate-600 text-sm font-medium text-gray-600 dark:text-slate-300 hover:text-brand dark:hover:text-white transition-colors border border-gray-200 dark:border-slate-600 hover:border-brand/30"
+        >
+          View Lessons
+          <svg className="w-4 h-4 ml-1.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+          </svg>
+        </Link>
+      )}
     </div>
   )
 }

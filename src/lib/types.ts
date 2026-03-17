@@ -25,7 +25,7 @@ export interface TestAttempt {
   id: string
   student_id: string
   attempt_number: number
-  attempt_date: string
+  attempt_date: string | null
   result: 'pass' | 'fail'
   test_centre: string | null
   notes: string | null

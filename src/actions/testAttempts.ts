@@ -3,7 +3,7 @@ import { createClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
 
 interface AddTestAttemptData {
-  attempt_date: string
+  attempt_year?: number | null  // year only (stored as YYYY-01-01)
   result: 'pass' | 'fail'
   test_centre?: string
   notes?: string
@@ -35,7 +35,7 @@ export async function addTestAttempt(studentId: string, data: AddTestAttemptData
   const { error } = await supabase.from('test_attempts').insert({
     student_id: studentId,
     attempt_number,
-    attempt_date: data.attempt_date,
+    attempt_date: data.attempt_year ? `${data.attempt_year}-01-01` : null,
     result: data.result,
     test_centre: data.test_centre || null,
     notes: data.notes || null,

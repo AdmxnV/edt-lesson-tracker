@@ -8,39 +8,66 @@ import CsvUploadModal from './CsvUploadModal'
 import { deleteStudent } from '@/actions/students'
 import type { StudentWithProgress } from '@/lib/types'
 
-interface StudentListProps {
-  students: StudentWithProgress[]
-}
+interface StudentListProps { students: StudentWithProgress[] }
 
 export default function StudentList({ students }: StudentListProps) {
   const [filter, setFilter] = useState<FilterType>('all')
+  const [search, setSearch] = useState('')
   const [addOpen, setAddOpen] = useState(false)
   const [csvOpen, setCsvOpen] = useState(false)
   const [, startTransition] = useTransition()
 
   const allCount = students.length
-  const pendingCount = students.filter(
-    (s) => s.completedCount > s.uploadedCount
-  ).length
-  const uploadedCount = students.filter(
-    (s) => s.completedCount === 12 && s.uploadedCount === 12
-  ).length
+  const pendingCount = students.filter((s) => s.completedCount > s.uploadedCount).length
+  const uploadedCount = students.filter((s) => s.completedCount === 12 && s.uploadedCount === 12).length
+
+  const searchLower = search.trim().toLowerCase()
 
   const filtered = students.filter((s) => {
-    if (filter === 'pending') return s.completedCount > s.uploadedCount
-    if (filter === 'uploaded') return s.completedCount === 12 && s.uploadedCount === 12
+    if (filter === 'pending' && !(s.completedCount > s.uploadedCount)) return false
+    if (filter === 'uploaded' && !(s.completedCount === 12 && s.uploadedCount === 12)) return false
+    if (searchLower) {
+      const matchName = s.name.toLowerCase().includes(searchLower)
+      const matchDriver = (s.driver_number ?? '').toLowerCase().includes(searchLower)
+      if (!matchName && !matchDriver) return false
+    }
     return true
   })
 
   function handleDelete(id: string) {
     if (!confirm('Delete this student and all their lesson records? This cannot be undone.')) return
-    startTransition(async () => {
-      await deleteStudent(id)
-    })
+    startTransition(async () => { await deleteStudent(id) })
   }
 
   return (
     <div>
+      {/* Search bar */}
+      <div className="mb-4">
+        <div className="relative max-w-md">
+          <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 dark:text-slate-500 pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+          </svg>
+          <input
+            type="search"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Search by name or driver number…"
+            className="w-full pl-9 pr-9 py-2.5 border border-gray-200 dark:border-slate-600 rounded-xl text-sm bg-white dark:bg-slate-800 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-brand/30 focus:border-brand transition-colors"
+          />
+          {search && (
+            <button
+              onClick={() => setSearch('')}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:text-slate-500 dark:hover:text-slate-300"
+              aria-label="Clear search"
+            >
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          )}
+        </div>
+      </div>
+
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
         <div className="flex-1 max-w-lg">
           <FilterBar
@@ -54,7 +81,7 @@ export default function StudentList({ students }: StudentListProps) {
         <div className="flex items-center gap-2 shrink-0">
           <button
             onClick={() => setCsvOpen(true)}
-            className="inline-flex items-center gap-2 px-4 py-2.5 border border-brand text-brand bg-white rounded-xl text-sm font-medium hover:bg-brand/5 transition-colors"
+            className="inline-flex items-center gap-2 px-4 py-2.5 border border-brand text-brand bg-white dark:bg-slate-800 rounded-xl text-sm font-medium hover:bg-brand/5 transition-colors"
           >
             <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M9 19l3 3m0 0l3-3m-3 3V10" />
@@ -75,16 +102,20 @@ export default function StudentList({ students }: StudentListProps) {
 
       {filtered.length === 0 ? (
         <div className="text-center py-16">
-          <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-gray-100 mb-4">
-            <svg className="w-6 h-6 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-gray-100 dark:bg-slate-700 mb-4">
+            <svg className="w-6 h-6 text-gray-400 dark:text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
             </svg>
           </div>
-          <p className="text-gray-500 font-medium">
-            {filter === 'all' ? 'No students yet' : 'No students match this filter'}
+          <p className="text-gray-500 dark:text-slate-400 font-medium">
+            {searchLower
+              ? `No students match "${search}"`
+              : filter === 'all'
+              ? 'No students yet'
+              : 'No students match this filter'}
           </p>
-          {filter === 'all' && (
-            <p className="text-gray-400 text-sm mt-1">
+          {filter === 'all' && !searchLower && (
+            <p className="text-gray-400 dark:text-slate-500 text-sm mt-1">
               Add a student manually or import a CSV to get started
             </p>
           )}

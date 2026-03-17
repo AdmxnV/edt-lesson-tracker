@@ -17,3 +17,5 @@ body {
 input[type="checkbox"] {
   accent-color: #1a3a6b;
 }
+
+/* Dark mode: override body bg/color via Tailwind dark: variants on body tag */

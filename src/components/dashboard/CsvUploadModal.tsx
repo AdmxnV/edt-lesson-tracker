@@ -33,6 +33,9 @@ function parseCsv(text: string): CsvStudentRow[] {
   const dobIdx = headers.findIndex((h) => h === 'dob' || h === 'date_of_birth')
   const driverIdx = headers.findIndex((h) => h === 'driver_number' || h === 'driver_no')
   const logbookIdx = headers.findIndex((h) => h === 'logbook_number' || h === 'logbook_no')
+  const typeIdx = headers.findIndex((h) => h === 'student_type' || h === 'type')
+
+  const validTypes = ['full', 'transfer', 'pre_test', 'external']
 
   if (nameIdx === -1) return []
 
@@ -40,11 +43,16 @@ function parseCsv(text: string): CsvStudentRow[] {
     const cols = line.split(',').map((c) => c.trim().replace(/^"|"$/g, ''))
     const name = nameIdx >= 0 ? cols[nameIdx] : ''
     if (!name) return acc
+    const rawType = typeIdx >= 0 ? cols[typeIdx]?.toLowerCase() : ''
+    const student_type = validTypes.includes(rawType)
+      ? (rawType as 'full' | 'transfer' | 'pre_test' | 'external')
+      : undefined
     acc.push({
       name,
       dob: dobIdx >= 0 ? parseDate(cols[dobIdx]) : null,
       driver_number: driverIdx >= 0 ? cols[driverIdx] || null : null,
       logbook_number: logbookIdx >= 0 ? cols[logbookIdx] || null : null,
+      student_type,
     })
     return acc
   }, [])

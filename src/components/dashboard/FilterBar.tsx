@@ -16,19 +16,19 @@ const filters: { key: FilterType; label: string }[] = [
 
 export default function FilterBar({ active, onChange, counts }: FilterBarProps) {
   return (
-    <div className="flex gap-1 bg-gray-100 rounded-xl p-1">
+    <div className="flex gap-1 bg-gray-100 dark:bg-slate-700 rounded-xl p-1">
       {filters.map(({ key, label }) => (
         <button
           key={key}
           onClick={() => onChange(key)}
           className={`flex-1 px-3 py-1.5 rounded-lg text-sm font-medium transition-all ${
             active === key
-              ? 'bg-white text-brand shadow-sm'
-              : 'text-gray-500 hover:text-gray-700'
+              ? 'bg-white dark:bg-slate-600 text-brand dark:text-white shadow-sm'
+              : 'text-gray-500 dark:text-slate-400 hover:text-gray-700 dark:hover:text-slate-200'
           }`}
         >
           {label}
-          <span className={`ml-1.5 text-xs ${active === key ? 'text-brand/70' : 'text-gray-400'}`}>
+          <span className={`ml-1.5 text-xs ${active === key ? 'text-brand/70 dark:text-white/70' : 'text-gray-400 dark:text-slate-500'}`}>
             ({counts[key]})
           </span>
         </button>
